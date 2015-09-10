@@ -5,10 +5,16 @@ using namespace arma;
 using namespace Rcpp;
 
 
-//This function builds the large D and D_star matrices
-//which contain the terms d_{i,j} and d_{i,j}*
+// #Function to build matrices for terms d_ij and d_ij*
+// #As done in Pan and Chappell 1998 the likelihood is expressed
+// #in terms of values d_{i,j} and d_{i,j}*. We evaluate these in matrix
+// #form by this function here
+// #ts: The vector of left truncated times
+// #(as,bs): vectors for the censoring intervals
+// #zs: sort(unique(c(t,a,b)))
 // [[Rcpp::export]]
-List cpp_buildMatrixD(NumericVector ts, NumericVector as, NumericVector bs, NumericVector zs){
+List cpp_buildMatrixD(NumericVector ts, NumericVector as,
+                      NumericVector bs, NumericVector zs){
   int n = ts.size(), k = zs.size();
 
   //arma::colvec t(ts.begin(), n, false);
@@ -39,6 +45,10 @@ List cpp_buildMatrixD(NumericVector ts, NumericVector as, NumericVector bs, Nume
   Named("Dstar") = Dstar);
 }
 
+// #A function to evaluate the log-likelihood when we do not have
+// #a full lambda vector
+// #dsz dz: are matrices of dim length(lambda)*n.
+// #These are used to evaluate the log likelihhod
 // [[Rcpp::export]]
 double cpp_logLikeRestricted(NumericVector lambda, NumericMatrix dsZ, NumericMatrix dZ){
  arma::colvec lam(lambda.begin(), lambda.size(), false);
@@ -50,6 +60,9 @@ double cpp_logLikeRestricted(NumericVector lambda, NumericMatrix dsZ, NumericMat
 
  return result;
 }
+
+// #A function to evaluate the gradient of the logLikelihood
+// #where lambda has reduced support
 // [[Rcpp::export]]
 NumericVector cpp_nablaLogLikeRestrict(NumericVector lambda, NumericMatrix dsZ, NumericMatrix dZ){
  arma::colvec lam(lambda.begin(), lambda.size(), false);

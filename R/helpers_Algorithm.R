@@ -6,25 +6,6 @@
 
 ###################################################################################
 
-#A function to evaluate the log-likelihood when we do not have
-#a full lambda vector
-#dsz dz: are matrices of dim n*length(lambda).
-#These are used to evaluate the log likelihhod
-logLikeRestricted<- function(lambda,dsz, dz){
-  #k<- length(z)
-  sum(log(1-exp(-as.vector(lambda%*%dsz))) - as.vector(lambda%*%dz))
-
-}
-
-#A function to evaluate the gradient of the logLikelihood
-#where lambda has reduced support
-nablaLogLikeRestrict<- function(lambda, dsz, dz){
-  #k<- length(z)
-  const<- as.vector(1/(exp(lambda%*%dsz)-1))
-  as.vector(dsz%*%const)-apply(dz,1,sum)
-
-}
-
 #A cpp implementation of tapply. Can be faster in
 #some cases
 tapply_fast<- function(x,index){
@@ -89,7 +70,7 @@ InterAlg<- function(ini= 1, data,index, epsilon = 1e-3,maxiter = 500,
   }
 
   return(list(lambda = newLambda, conv = FALSE, dsz = dsz, dz = dz,
-              index = index, Dmatrix = Dmatrix, z = z))
+              index = index, Dmatrix = Dmatrix, z = z) )
 }
 
 
@@ -117,7 +98,17 @@ check.KKT<- function(obj){
   h_i<- c(h_1,h_i)
 
   #Find gradient
-  gradLogL<- cpp_nablaLogLike(LAMBDA, Dmatrix,z)
+  diffz<- z[2:k]-z[1:(k-1)]
+  diffz[which(diffz==Inf)]<- 1e+10
+
+  #DMatrix
+  Dstar<- Dmatrix$Dstar
+  D<- Dmatrix$D
+  DsZ<- t(cpp_scale(Dstar, diffz))
+  DZ<- t(cpp_scale(D, diffz))
+
+
+  gradLogL<- cpp_nablaLogLikeRestrict(LAMBDA, DsZ,DZ)
   gradHi<- matrix(0, ncol = k-1, nrow = k-1)
   diag(gradHi)<- -1
   diag(gradHi[-1,-ncol(gradHi)])<- 1
@@ -142,13 +133,22 @@ check.derv<- function(obj){
   index<- obj$index
   Dmatrix<- obj$Dmatrix
   z<- obj$z
+  k<- length(z)
+  diffz<- z[2:k]-z[1:(k-1)]
+  diffz[which(diffz==Inf)]<- 1e+10
+
 
   k<- length(z)
   myf<- stepfun(index,c(0,lam) )
   LAMBDA<- myf(1:(k-1))
 
   #Find gradient
-  derv<- nablaLogLike(LAMBDA, Dmatrix,z)
+  Dstar<- Dmatrix$Dstar
+  D<- Dmatrix$D
+  DsZ<- t(cpp_scale(Dstar, diffz))
+  DZ<- t(cpp_scale(D, diffz))
+
+  derv<- cpp_nablaLogLikeRestrict(LAMBDA,DsZ,DZ)
   vec<- rev(cumsum(rev(derv)))
 }
 
@@ -162,3 +162,18 @@ find.local.max<- function(vec, tol = 1e-3){
   index<- index[(values>tol)]
   index
 }
+
+
+
+
+#The projection function used in the algorithms for maximum likelihood
+#In our case it is simply a non-negative isotonic regression
+#We use the default function in R
+projLambda<- function(lambda){
+  whichInf<- which(lambda==Inf)
+
+  c(pmax(isoreg(x = lambda[lambda!=Inf])$yf,0), rep(Inf,length(whichInf)))
+
+}
+
+
