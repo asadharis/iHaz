@@ -34,117 +34,53 @@ The maximum number of iterations for the main loop of the algorithm. See details
 The tolerance to determine the stopping condition for the main loop. See details below.
 }
   \item{check.condition}{
-A string to specify the type of convergence criteria. The possible options are "KKT" which uses the Karush
+A string to specify the type of convergence criteria. The possible options are "KKT" which uses the Karush–Kuhn–Tucker conditions, or "derv" which uses a derivative condition as in Lemma 3.1 of Wellner et al. (1997).
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+Logical indicator to specify whether or not details should be printed to the screen while running the algorithm.
 }
 }
 \details{
-The estimated hazard function via the projection algorithm of Pan et al. (1998) is a step function with a potential change point at every time point in our dataset. In practice however, the estimated hazard has only a small number of change points.
+The estimated hazard function via the projection algorithm of Pan et al. (1998) is a step function with a potential change point at every time point in our dataset. In practice however, the estimated hazard has only a small number of change points. This naturally leads us to a support reduction type algorithm [Groeneboom et al. (2008)]. We define \code{z = sort(unique(c(a,b,t)))} as all the possible time points. Our estimated hazard function is a step function with potential change points at each element of \code{z}. For then algorithm of Pan et al. (1998) this gives us a parameter vector \code{lambda} of length \code{K = length(z)}. In practice however, the total number of change points for the estimated step function is much smaller than \code{K}.
 
+Our algorithm proceeds as follows:
+
+We begin with \code{ini.index}, the initial indices which are a subset of the vector \code{1:K}. For comupational reasons we must have 1 in the initial index set. We then optimizate the objective function over the class of step functions with change points given by \code{ini.index}.This is done via the projection algorithm of Pan et al. (1998). \code{inter.maxiter} and \code{inter.tol} specify the maximum number of iterations and tolerance for checking stopping conditions for this projection algorithm, respectively.
+
+Once the function is optimized for the reduced support, we check if the some optimization condition is met upto the \code{main.tol} accuracy. If the condition is not met, support points are added and the index set is updated. This continues until convergence or until \code{main.maxiter} iterations.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+An object of class "iHaz" whcih is a list with the following components:
+\item{hazard}{
+The estimated hazard function. This is an \code{R}, vector of class "stepfun".
+}
+\item{survival}{
+The etimated survival function. This function also takes as input, a vector at which we wish to evaluate the estimated survival probability.
+}
+\item{index}{
+The index set of our estimates. This corresponds to the indices of \code{z}; it is the final updated index set of our algorithm.
+}
+\item{a, b, t}{
+The values of \code{a, b} and \code{t} used in estimation of survival and hazard functions.
+}
+\item{conv}{
+
+}
 }
 \references{
-%% ~put references to the literature/web site here ~
+Pan, Wei, and R. Chappell. "Estimating survival curves with left-truncated and interval-censored data under monotone hazards." Biometrics (1998): 1053-1060.
+
+Piet Groeneboom, Geurt Jongbloed, and Jon A. Wellner. "The Support Reduction Algorithm for Computing Non-Parametric Function Estimates in Mixture Models." Scandinavian Journal of Statistics 35.3 (2008): 385-399.
+
+Jon A. Wellner, and Yihui Zhan. "A hybrid algorithm for computation of the nonparametric maximum likelihood estimator from censored data." Journal of the American Statistical Association 92.439 (1997): 945-959.
 }
 \author{
-%%  ~~who you are~~
+Asad Haris, Gary Chan
 }
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{plot.iHaz}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (data, ini.index = 1:3, inter.maxiter = 1000, inter.tol = 1e-04,
-    main.maxiter = 1000, main.tol = 0.001, check.condition = c("derv",
-        "KKT"), verbose = FALSE)
-{
-    index <- ini.index
-    if (verbose)
-        cat("Building D matrix...")
-    a <- data$a
-    t <- data$t
-    b <- data$b
-    z <- sort(unique(c(a, b, t)))
-    Dmatrix <- cpp_buildMatrixD(t, a, b, z)
-    if (verbose)
-        cat("done.\n\n")
-    for (i in 1:main.maxiter) {
-        if (verbose)
-            cat(paste0("Iteration Number: ", i, "\n"))
-        myans <- InterAlg(ini = 1, data, index = index, epsilon = inter.tol,
-            maxiter = inter.maxiter, Dmatrix = Dmatrix)
-        if (check.condition[1] == "derv") {
-            temp <- check.derv(myans)
-            newindex <- cpp_findLocalMax(temp, main.tol)
-        }
-        else {
-            u_i <- check.KKT(myans)
-            newindex <- cpp_findLocalMax(-u_i, main.tol)
-        }
-        index2 <- sort(unique(c(index, newindex)))
-        if (length(index2) - length(index) == 0) {
-            k <- length(myans$z)
-            myf <- stepfun(z[myans$index], c(0, myans$lam))
-            LAMBDA <- myf(z[1:(k - 1)])
-            object <- list()
-            object$hazard <- myf
-            survivalF <- function(x) {
-                sapply(x, EstimateSurv, lambda = LAMBDA, z = myans$z)
-            }
-            class(survivalF) <- "SurvivalFunction"
-            object$survival <- survivalF
-            object$index <- myans$index
-            object$a <- a
-            object$b <- b
-            object$t <- t
-            object$conv <- myans$conv
-            object$call <- match.call()
-            class(object) <- "iHaz"
-            return(object)
-        }
-        else {
-            index <- index2
-        }
-    }
-    k <- length(myans$z)
-    myf <- stepfun(z[myans$index], c(0, myans$lam))
-    LAMBDA <- myf(z[1:(k - 1)])
-    object <- list()
-    object$hazard <- myf
-    survivalF <- function(x) {
-        sapply(x, EstimateSurv, lambda = LAMBDA, z = myans$z)
-    }
-    class(survivalF) <- "SurvivalFunction"
-    object$survival <- survivalF
-    object$index <- myans$index
-    object$a <- a
-    object$b <- b
-    object$t <- t
-    object$call <- match.call()
-    object$conv <- FALSE
-    class(object) <- "iHaz"
-    return(object)
-  }
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
