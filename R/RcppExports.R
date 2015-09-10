@@ -33,7 +33,3 @@ fast_factor <- function(x) {
     .Call('iHaz_fast_factor', PACKAGE = 'iHaz', x)
 }
 
-myf <- function(X) {
-    .Call('iHaz_myf', PACKAGE = 'iHaz', X)
-}
-
