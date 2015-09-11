@@ -22,8 +22,8 @@ List cpp_buildMatrixD(NumericVector ts, NumericVector as,
   //arma::colvec b(bs.begin(), n, false);
   //arma::colvec z(zs.begin(), k, false);
 
-  arma::mat D = arma::zeros(n,k-1);
-  arma::mat Dstar = arma::zeros(n,k-1);
+  arma::sp_mat D(n,k-1);
+  arma::sp_mat Dstar(n,k-1);
 
 
   for(int i = 0; i < n; i = i+1 )

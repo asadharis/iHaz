@@ -42,11 +42,13 @@ InterAlg<- function(ini= 1, data,index, epsilon = 1e-3,maxiter = 500,
   D<- Dmatrix$D
 
   #DsZ<- scale(Dstar, center = FALSE, scale = 1/diffz)
-  DsZ<- cpp_scale(Dstar, diffz)
+  #DsZ<- cpp_scale(Dstar, diffz)
+  DsZ<- Dstar%*%Matrix(diag(diffz))
   dsz<- apply(DsZ, 1, function(x){tapply_fast(x, fullIndex)} )
 
   #DZ<- scale(D, center = FALSE, scale = 1/diffz)
-  DZ<- cpp_scale(D, diffz)
+  #DZ<- cpp_scale(D, diffz)
+  DZ<- D%*%Matrix(diag(diffz))
   dz<- apply(DZ, 1, function(x){tapply_fast(x, fullIndex)} )
 
   #Index of lambda values which will be set at Infinity
@@ -104,8 +106,8 @@ check.KKT<- function(obj){
   #DMatrix
   Dstar<- Dmatrix$Dstar
   D<- Dmatrix$D
-  DsZ<- t(cpp_scale(Dstar, diffz))
-  DZ<- t(cpp_scale(D, diffz))
+  DsZ<- as.matrix(t(Dstar%*%Matrix(diag(diffz))))
+  DZ<- as.matrix(t(D%*%Matrix(diffz)))
 
 
   gradLogL<- cpp_nablaLogLikeRestrict(LAMBDA, DsZ,DZ)
@@ -145,11 +147,14 @@ check.derv<- function(obj){
   #Find gradient
   Dstar<- Dmatrix$Dstar
   D<- Dmatrix$D
-  DsZ<- t(cpp_scale(Dstar, diffz))
-  DZ<- t(cpp_scale(D, diffz))
+  DsZ<- as.matrix(t(Dstar%*%Matrix(diag(diffz))))
+  DZ<- as.matrix(t(D%*%Matrix(diag(diffz))))
+  #DsZ<- t(cpp_scale(Dstar, diffz))
+  #DZ<- t(cpp_scale(D, diffz))
 
   derv<- cpp_nablaLogLikeRestrict(LAMBDA,DsZ,DZ)
   vec<- rev(cumsum(rev(derv)))
+  vec
 }
 
 #This function finds local maxima and returns an index vector
