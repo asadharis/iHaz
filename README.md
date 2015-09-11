@@ -55,4 +55,21 @@ Call: stepfun(z[myans$index], c(0, myans$lam))
 
 >plot(fit$hazard, main = "Hazard Function")
 ```
+![](README-plot1.png)
 
+*The `S3` plot functions for objects of call `iHaz` plots the hazard and survival functions for the range of the data.
+```R
+plot(fit, col = "red", type = "o", lwd = 1, pch = 16, cex = 0.5)
+```
+![](README-plot2.png)
+
+
+-------------------------------------------------------------------------
+##Installation
+* From Github: `devtools::install_github("asadharis/iHaz")` latest development version.
+
+NOTE: The `R` package will be uploaded to `CRAN` soon upon approval by PI.
+
+-------------------------------------------------------------------------
+##Acknowledgements 
+I would like to express my deep gratitude to Professor Gary Chan, my research supervisor, for his patient guidance, enthusiastic encouragement and useful critiques of this project.
