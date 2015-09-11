@@ -1,14 +1,15 @@
 Package: iHaz
 Type: Package
-Title: Increasing hazard function estimation for truncated and censored data
-Version: 0.1.0
+Title: Increasing Hazard Function Estimation for Truncated and Censored Data
+Version: 0.1.1
 Date: 2015-09-09
-Author: Who wrote it
+Author: Asad Haris <aharis@uw.edu> and Gary Chan <kcgchan@uw.edu>
 Maintainer: Asad Haris <aharis@uw.edu>
-Description: Increasing hazard function estimation for truncated and censored data via a support reduction algorithm.
+Description: Increasing hazard function estimation for truncated and censored data via a support reduction type algorithm.
 License: GPL(>= 2)
 LazyData: TRUE
 NeedsCompilation: yes
 Depends: R (>= 3.1.0)
+Suggests: survival
 Imports:  Matrix, Rcpp (>= 0.12.0)
 LinkingTo: Rcpp, RcppArmadillo

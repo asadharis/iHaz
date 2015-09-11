@@ -72,7 +72,9 @@ NumericVector cpp_nablaLogLikeRestrict(NumericVector lambda, NumericMatrix dsZ, 
  arma::mat dz(dZ.begin(), r, c, false);
 
  arma::mat res =  1/(exp(trans(lam)*dsz)-1);
- res = dsz*trans(res) - sum(dz, 1);
+ arma::mat temp = dsz*trans(res);
+ temp.elem(find_nonfinite(temp)).fill(0);
+ res = temp - sum(dz, 1);
  return NumericVector(res.begin(),res.end());
 }
 

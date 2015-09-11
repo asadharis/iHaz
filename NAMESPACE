@@ -2,4 +2,8 @@ useDynLib(iHaz)
 importFrom(Rcpp, evalCpp)
 import(Matrix)
 
-exportPattern("^[[:alpha:]]+")
+export(iHaz)
+S3method(plot, iHaz)
+S3method(print, iHaz)
+
+S3method(print, SurvivalFunction)

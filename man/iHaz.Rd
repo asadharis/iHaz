@@ -34,7 +34,7 @@ The maximum number of iterations for the main loop of the algorithm. See details
 The tolerance to determine the stopping condition for the main loop. See details below.
 }
   \item{check.condition}{
-A string to specify the type of convergence criteria. The possible options are "KKT" which uses the Karush–Kuhn–Tucker conditions, or "derv" which uses a derivative condition as in Lemma 3.1 of Wellner et al. (1997).
+A string to specify the type of convergence criteria. The possible options are "KKT" which uses the Karush-Kuhn-Tucker conditions, or "derv" which uses a derivative condition as in Lemma 3.1 of Wellner et al. (1997).
 }
   \item{verbose}{
 Logical indicator to specify whether or not details should be printed to the screen while running the algorithm.
@@ -64,7 +64,7 @@ The index set of our estimates. This corresponds to the indices of \code{z}; it 
 The values of \code{a, b} and \code{t} used in estimation of survival and hazard functions.
 }
 \item{conv}{
-
+A logical indicator of convergence status.
 }
 }
 \references{
@@ -82,5 +82,36 @@ Asad Haris, Gary Chan
 \code{\link{plot.iHaz}}
 }
 \examples{
+library(iHaz)
+#Generate some data
+#Here event time is distributed Exponential(1)
+#Simulation study from Pan et al. (1998)
+n<- 500
+x<- rexp(n)
+t<- runif(n, min = 0, max = 1.5)
+xnew<- x[(x>=t)]
+tnew<- t[x>=t]
+t<- tnew
+a<- xnew
+b<- xnew
+a[xnew<= tnew+0.5]<- tnew[xnew<= tnew+0.5]
+b[xnew<= tnew+0.5]<- tnew[xnew<= tnew+0.5] +0.5
+a[xnew > tnew+0.5]<- tnew[xnew > tnew+0.5] +0.5
+b[xnew > tnew+0.5]<- Inf
+dat<- list("a" = a, "b" = b, "t" = t)
 
+#Fit an 'iHaz' object
+fit<- iHaz(dat, ini.index = 1:3 ,verbose =TRUE)
+
+#Veiw/plot extimated hazard function
+fit$hazard
+plot(fit$hazard, main = "Hazard Function")
+
+#View the survival function
+fit$survival
+#Estimated survival probabilitcies at some time points
+fit$survival(c(0.5,0.8,1,1.5))
+
+#Plot iHaz object
+plot(fit, col = "red", type = "o", lwd = 1, pch = 16, cex = 0.5)
 }

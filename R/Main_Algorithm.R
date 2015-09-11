@@ -114,7 +114,8 @@ iHaz<- function(data, ini.index = 1:3, inter.maxiter = 1000, inter.tol = 1e-4,
 }
 
 #A print function for the objects of class. S3 generic method.
-print.iHaz<- function(obj){
+print.iHaz<- function(x,...){
+  obj<- x
   if(obj$conv){
     cat("Call:\n")
     print(obj$call)
@@ -132,20 +133,21 @@ print.iHaz<- function(obj){
   }
 }
 
-plot.iHaz<- function(obj,...){
+plot.iHaz<- function(x,...){
+  obj<- x
   z<- sort(unique( c(obj$a,obj$b,obj$t)))
   upper.lim<- max(z[is.finite(z)])
   lower.lim<- min(z[is.finite(z)])
   mys<- seq(lower.lim+1e-3, upper.lim-1e-3,length = 100)
   plot(mys, obj$hazard(mys), main = "Estimated hazard function for data",
-       xlab = "x", ylab = expression(lambda*"(x)") )
+       xlab = "x", ylab = expression(lambda*"(x)") ,...)
   par(ask = TRUE)
   plot(mys, obj$surv(mys), main = "Estimated survival function for data",
-       xlab = "x", ylab = "S(x)" )
+       xlab = "x", ylab = "S(x)" ,...)
   par(ask = FALSE)
 }
 
-print.SurvivalFunction<- function(x){
+print.SurvivalFunction<- function(x,...){
   cat("A survival function object.\n")
   cat("\nThe Maximum Likelihood Estimator of the survival function for our data.")
   cat("\nThis can be used as a regular R function with vector input.")
