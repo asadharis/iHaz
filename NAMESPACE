@@ -1,6 +1,5 @@
 useDynLib(iHaz)
 importFrom(Rcpp, evalCpp)
-import(Matrix)
 
 export(iHaz)
 S3method(plot, iHaz)
